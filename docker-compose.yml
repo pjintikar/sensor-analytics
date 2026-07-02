@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  # Container 1: The Relational Database Engine
+  db:
+    image: postgres:15-alpine
+    container_name: sensor_postgres_container
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: your_encoded_password_here  # Use your plain text password here
+      POSTGRES_DB: sensordb
+    ports:
+      - "5435:5432" # Maps an alternate local port (5435) to the container's internal 5432 port
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Container 2: The FastAPI Web Server & Analytical Application
+  web:
+    build: .
+    container_name: fastapi_analytics_container
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:your_encoded_password_here@db:5432/sensordb
+    depends_on:
+      - db # Forces Docker to boot up the database container completely before starting the API
+
+volumes:
+  postgres_data: # Ensures data persists on your hard drive even if the container is destroyed
